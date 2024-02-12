@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+import passport from 'passport';
+import passportLocalMongoose from "passport-local-mongoose"
 
 const studentSchema = new mongoose.Schema({
   name: {
@@ -26,6 +28,15 @@ const studentSchema = new mongoose.Schema({
   ],
 });
 
+studentSchema.plugin(passportLocalMongoose)
+
 const Student = mongoose.model('Student', studentSchema);
 
-module.exports = Student;
+passport.use(Student.createStrategy()); 
+  
+
+// passport.serializeUser(Student.serializeUser()); 
+// passport.deserializeUser(Student.deserializeUser())
+
+
+export default Student
