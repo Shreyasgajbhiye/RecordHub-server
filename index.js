@@ -1,23 +1,26 @@
 import express  from "express";
-import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import route from "./routes/mentorRoute.js"
+
+import {connectDB} from "./config/db.js";
+
+
 const app = express();
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
 app.use(cors());
 dotenv.config();
 
-const PORT = process.env.PORT || 7000;
-const URL = process.env.MONGOURL;
+const PORT = process.env.PORT || 8000;
 
-mongoose.connect(URL).then(() =>{
-    console.log("DB connected successfully..");
+connectDB()
 
-    app.listen(PORT, ()=>{
-        console.log(`server is running on port : ${PORT}`);
-    })
-}).catch(error => console.log(error));
+app.get("/api", route);
 
-app.use("/api", route);
+
+app.listen(PORT, () => {
+    console.log("Listen on the port 3000...");
+});
