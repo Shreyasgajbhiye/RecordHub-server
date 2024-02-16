@@ -6,8 +6,9 @@ import session from "express-session"
 import passport from "passport";
 
 
-import route from "./routes/mentorRoute.js"
+import route from "./routes/User/studetRoute.js"
 import {connectDB} from "./config/db.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 
 
 const app = express();
@@ -25,14 +26,15 @@ app.use(session({
     uninitialize: false
 }))
 
-app.use(passport.initialize())
-app.use(passport.session())
+// app.use(passport.initialize())
+// app.use(passport.session())
 
 const PORT = process.env.PORT || 8000;
 
 connectDB()
 
 app.use("/api", route);
+app.use(errorHandler)
 
 
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 import passport from 'passport';
 import passportLocalMongoose from "passport-local-mongoose"
 
@@ -28,11 +28,11 @@ const studentSchema = new mongoose.Schema({
   ],
 });
 
-studentSchema.plugin(passportLocalMongoose)
+// studentSchema.plugin(passportLocalMongoose)
 
-const Student = mongoose.model('Student', studentSchema);
+const Student = mongoose.model("Student", studentSchema);
 
-passport.use(Student.createStrategy()); 
+// passport.use(Student.createStrategy()); 
   
 
 // passport.serializeUser(Student.serializeUser()); 
