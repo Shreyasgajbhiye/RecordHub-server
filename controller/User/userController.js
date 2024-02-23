@@ -1,6 +1,8 @@
 
 import Student from '../../model/User/User.js'
 import generateToken from '../../utils/generateTokens.js';
+import bcryptjs from 'bcrypt'
+import jwt from 'jsonwebtoken';
 
 export const signup = (async (req, res) => {
   const { name, email, password, year } = req.body;
@@ -11,24 +13,14 @@ export const signup = (async (req, res) => {
     res.status(400).json({ message: "User already exists" });
   }
 
+  const hashedPassword = await bcryptjs.hash(password, 10)
+
   const user = await Student.create({
     name,
     email,
-    password,
+    password: hashedPassword,
     year
   });
-
-  // const user = Student.register(name, email, password, year,
-  //     (err, student) => {
-  //       if (err) {
-  //         console.log(err)
-  //       } else {
-  //         passport.authenticate("local")
-  //           (req, res, function () {
-  //             res.send("successfully saved!");
-  //           })
-  //       }
-  //     })
 
 
 
@@ -51,7 +43,17 @@ export const signup = (async (req, res) => {
 export const authUser = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await Student.findOne({ email, password });
+  const user = await Student.findOne({ email });
+
+  if(!user) {
+    return res.status(401).json({message: "Authentication failed"});
+  }
+
+  const passwordMatch = await bcryptjs.compare(password, user.password)
+
+  if(!password) {
+    return res.status(401).json({message: "Authentication failed"})
+  }
 
   if (user) {
     generateToken(res, user._id);
