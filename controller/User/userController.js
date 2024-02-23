@@ -25,16 +25,9 @@ export const signup = (async (req, res) => {
 
 
   if (user) {
-    generateToken(res, user._id);
-
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
+    res.status(201).json({ message: "User registered successfully!" });
   } else {
-    res.status(400);
-    throw new Error('Invalid user data');
+    res.status(400).json({ error: "Registration failed" });
   }
 });
 
@@ -45,25 +38,25 @@ export const authUser = async (req, res) => {
 
   const user = await Student.findOne({ email });
 
-  if(!user) {
-    return res.status(401).json({message: "Authentication failed"});
+  if (!user) {
+    return res.status(401).json({ message: "Authentication failed" });
   }
 
   const passwordMatch = await bcryptjs.compare(password, user.password)
 
-  if(!password) {
-    return res.status(401).json({message: "Authentication failed"})
+  if (!passwordMatch) {
+    return res.status(401).json({ message: "Authentication failed" })
   }
 
   if (user) {
-    generateToken(res, user._id);
-
-    res.json({
+    const token = generateToken(res, user._id);
+    res.status(200).json({
       _id: user._id,
       name: user.name,
       email: user.email,
+      token: token
     });
   } else {
-    res.status(401).json({message: "Invalid email or password"});
+    res.status(401).json({ message: "Invalid email or password" });
   }
 };
