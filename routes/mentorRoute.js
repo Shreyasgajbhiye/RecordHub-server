@@ -7,7 +7,7 @@ const route = express.Router();
 
 route.post('/Mentor/signup', signup)
 route.post("/Mentor/login", login)
-route.post('/Mentor/approveStudent/:id', mentorProtect, approveStudent)
+route.post('/Mentor/verifyStudent/:id', mentorProtect, approveStudent)
 route.post('/getAllStudents', getAllStudents);
 // route.post("/create", create);
 // route.get("/getAll", getAll);

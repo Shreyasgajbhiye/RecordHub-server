@@ -1,4 +1,3 @@
-
 import { request } from 'express';
 import Student from '../model/Student.model.js'
 import generateToken from '../utils/generateTokens.js';
