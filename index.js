@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import session from "express-session"
-import passport from "passport";
+
 
 
 import route from "./routes/User/studetRoute.js"
@@ -12,11 +12,16 @@ import { errorHandler } from "./middleware/errorMiddleware.js";
 
 
 const app = express();
+dotenv.config();
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json())
-app.use(cors());
-dotenv.config();
+app.use(cors({
+   origin:process.env.FRONT_URI,
+   credentials:true
+}));
+
+app.use(errorHandler);
 
 const passportSecret = process.env.passportSecret;
 

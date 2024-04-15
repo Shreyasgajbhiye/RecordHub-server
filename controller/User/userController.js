@@ -10,7 +10,11 @@ export const signup = (async (req, res) => {
   const userExists = await Student.findOne({ email });
 
   if (userExists) {
-    res.status(400).json({ message: "User already exists" });
+    // res.status(400);
+    let error = new Error("User already exists");
+    res.status(400);
+    throw error;
+    
   }
 
   const hashedPassword = await bcryptjs.hash(password, 10)
