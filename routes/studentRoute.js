@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { signup, login } from '../controller/studentcontroller.js';
+import { login, signup } from '../controller/studentController.js';
 import { studentProtect } from '../middleware/authMiddleware.js';
 
 const route = express.Router();
