@@ -1,8 +1,15 @@
 import mongoose from 'mongoose';
 
-
 const studentSchema = new mongoose.Schema({
-  name: {
+  fname: {
+    type: String,
+    required: true,
+  },
+  mname: {
+    type: String,
+    required: true,
+  },
+  lname: {
     type: String,
     required: true,
   },
@@ -11,9 +18,18 @@ const studentSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   year: {
     type: Number,
     required: true,
+  },
+  isApproved: {
+    type: Boolean,
+    default: false,
+    required: true
   },
   batch: [
     {
@@ -21,18 +37,12 @@ const studentSchema = new mongoose.Schema({
       ref: 'Batch',
     },
   ],
-  
 });
 
-// studentSchema.plugin(passportLocalMongoose)
+
 
 const Student = mongoose.model("Student", studentSchema);
 
-// passport.use(Student.createStrategy()); 
-  
-
-// passport.serializeUser(Student.serializeUser()); 
-// passport.deserializeUser(Student.deserializeUser())
 
 
 export default Student
