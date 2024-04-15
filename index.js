@@ -6,7 +6,7 @@ import session from "express-session"
 
 
 
-import route from "./routes/User/studetRoute.js"
+import route from "./routes/studentRoute.js"
 import {connectDB} from "./config/db.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
