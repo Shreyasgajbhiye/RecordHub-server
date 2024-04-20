@@ -34,12 +34,6 @@ const mentorSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "Batch",
         },
-    ],
-    requests: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Student"
-        }
     ]
 });
 

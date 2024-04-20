@@ -1,6 +1,7 @@
 import Admin from "../model/Admin.model.js";
 import Batch from "../model/Batch.model.js";
 import Mentor from "../model/Mentor.model.js"
+import Student from "../model/Student.model.js"
 import generateToken from "../utils/generateTokens.js";
 import bcryptjs from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -169,6 +170,17 @@ export const signup = async (req, res, next) => {
     try {
       const mentors = await Mentor.find({});
       res.status(200).json(mentors);
+    } catch (error) {
+      const err = new Error(error);
+      err.status = 401;
+      next(err);
+    }
+  }
+
+  export const getAllStudents = async (req, res, next) => {
+    try {
+      const students = await Student.find({});
+      res.status(200).json(students);
     } catch (error) {
       const err = new Error(error);
       err.status = 401;

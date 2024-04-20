@@ -1,4 +1,5 @@
 import Student from "../model/Student.model.js";
+import Batch from "../model/Batch.model.js";
 import generateToken from "../utils/generateTokens.js";
 import bcryptjs from "bcrypt";
 import nodemailer from "nodemailer";
@@ -66,7 +67,7 @@ function sendVerifyMail(email,user_id,fname)
 
 export const signup = async (req, res, next) => {
   try {
-    const { fname, mname, lname, email, password, year } = req.body;
+    const { fname, mname, lname, email, password, year, batch } = req.body;
 
     const userExists = await Student.findOne({ email });
 
@@ -75,6 +76,14 @@ export const signup = async (req, res, next) => {
       err.status = 400;
       next(err);
     }
+
+    const batchId = await Batch.findOne({ name: batch });
+
+      if (!batchId) {
+        const err = new Error("Batch not found Please Ask you mentor to register first");
+        err.status = 400;
+        next(err);
+      }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
 
@@ -85,6 +94,7 @@ export const signup = async (req, res, next) => {
       email,
       password: hashedPassword,
       year,
+      batch: batchId._id
     });
 
     if (user) {
@@ -192,13 +202,4 @@ export const approveStudent = async (req, res, next) => {
   }
 };
 
-export const getAllStudents = async (req, res, next) => {
-  try {
-    const students = await Student.find({});
-    res.status(200).json(students);
-  } catch (error) {
-    const err = new Error(error);
-    err.status = 401;
-    next(err);
-  }
-};
+

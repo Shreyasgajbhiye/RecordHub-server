@@ -1,13 +1,14 @@
 import express from "express";
 import { login } from "../controller/mentorController.js";
-import { approveStudent, getAllStudents } from "../controller/studentController.js";
+import { approveStudent } from "../controller/studentController.js";
+import { getAllStudents } from "../controller/mentorController.js";
 import { protect, restrict } from "../middleware/authMiddleware.js";
 
 const route = express.Router();
 
 route.post("/Mentor/login", login)
 route.post('/Mentor/verifyStudent/:id', protect, restrict("mentor"), approveStudent)
-route.post('/getAllStudents', getAllStudents);
+route.get('/Mentor/getAllStudents', protect, restrict("mentor"), getAllStudents);
 // route.post("/create", create);
 // route.get("/getAll", getAll);
 // route.get("/getOne/:id", getOne);
