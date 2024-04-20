@@ -5,7 +5,6 @@ import { protect, restrict } from "../middleware/authMiddleware.js";
 
 const route = express.Router();
 
-route.post('/Mentor/signup', signup)
 route.post("/Mentor/login", login)
 route.post('/Mentor/verifyStudent/:id', protect, restrict("mentor"), approveStudent)
 route.post('/getAllStudents', getAllStudents);

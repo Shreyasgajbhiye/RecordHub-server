@@ -3,43 +3,6 @@ import generateToken from "../utils/generateTokens.js";
 import bcryptjs from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const signup = async (req, res, next) => {
-  try {
-    const { fname, mname, lname, email, password, batch } = req.body;
-
-    const userExists = await Mentor.findOne({ email });
-
-    if (userExists) {
-      const err = new Error("Mentor already exists");
-      err.status = 400;
-      next(err);
-    }
-
-    const hashedPassword = await bcryptjs.hash(password, 10);
-
-    const user = await Mentor.create({
-      fname,
-      mname,
-      lname,
-      email,
-      password: hashedPassword,
-      batch,
-    });
-
-    if (user) {
-      res.status(201).json({ message: "User registered successfully!" });
-    } else {
-      res.status(400);
-      const err = new Error("Registration failed");
-      err.status = 400;
-      next(err);
-    }
-  } catch (error) {
-    const err = new Error(error);
-    err.status = 400;
-    next(err);
-  }
-};
 
 export const login = async (req, res, next) => {
   try {
