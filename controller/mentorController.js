@@ -1,8 +1,9 @@
 import Mentor from "../model/Mentor.model.js";
 import generateToken from "../utils/generateTokens.js";
 import bcryptjs from "bcrypt";
+import jwt from "jsonwebtoken";
 
-export const signup = async (req, res) => {
+export const signup = async (req, res, next) => {
   try {
     const { fname, mname, lname, email, password, batch } = req.body;
 
@@ -60,12 +61,24 @@ export const login = async (req, res, next) => {
       next(err);
     }
 
+    const token = jwt.sign(
+      {
+        user: user._id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    )
+
     if (user) {
       res.status(200).json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id),
+        token: token,
       });
     } else {
       const err = new Error("Invalid email or password");

@@ -1,8 +1,8 @@
-import { request } from "express";
 import Student from "../model/Student.model.js";
 import generateToken from "../utils/generateTokens.js";
 import bcryptjs from "bcrypt";
 import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 
 export const verifyMail = async(req,res)=>{
   try {
@@ -122,6 +122,18 @@ export const login = async (req, res, next) => {
       next(err);
     }
 
+    const token = jwt.sign(
+      {
+        user: user._id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    )
+
     if (user) {
       if (user.isVerified) {
         if(user.isApproved){
@@ -129,7 +141,7 @@ export const login = async (req, res, next) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            token: generateToken(user._id)
+            token: token
           });
         }else{
           const err = new Error("Not Approved yet");

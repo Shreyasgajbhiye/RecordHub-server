@@ -22,6 +22,10 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    default: "student"
+},
   year: {
     type: Number,
     required: true,
@@ -40,6 +44,12 @@ const studentSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Batch',
+    },
+  ],
+  achievement: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Achievement',
     },
   ],
 });

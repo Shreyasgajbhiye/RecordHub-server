@@ -2,7 +2,7 @@
 import express from 'express'
 
 import { signup, login, verifyMail } from '../controller/studentcontroller.js';
-// import { studentProtect } from '../middleware/authMiddleware.js';
+// import { protect } from '../middleware/authMiddleware.js';
 // import { verify } from 'jsonwebtoken';
 
 const route = express.Router();

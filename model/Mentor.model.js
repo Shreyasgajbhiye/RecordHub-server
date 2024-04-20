@@ -19,10 +19,15 @@ const mentorSchema = new mongoose.Schema({
     email: {
         type: String,
         require: true,
+        unique: true,
     },
     password: {
         type: String,
         require: true,
+    },
+    role: {
+        type: String,
+        default: "mentor"
     },
     batch: [
         {
@@ -41,3 +46,4 @@ const mentorSchema = new mongoose.Schema({
 const Mentor = mongoose.model("Mentor", mentorSchema);
 
 export default Mentor;
+
