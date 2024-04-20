@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, login } from "../controller/mentorController.js";
+import { login } from "../controller/mentorController.js";
 import { approveStudent, getAllStudents } from "../controller/studentController.js";
 import { protect, restrict } from "../middleware/authMiddleware.js";
 
