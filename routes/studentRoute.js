@@ -9,8 +9,6 @@ const route = express.Router();
 
 route.post('/Student/login', login);
 route.post('/Student/signup', signup);
-route.get('/Student/Verificationlink',(req, res) => {
-    res.send('Student verified successfully.')
-  });
+route.get('/Student/Verificationlink', verifyMail);
 
 export default route

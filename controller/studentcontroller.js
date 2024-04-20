@@ -1,8 +1,8 @@
-import { request } from 'express';
-import Student from '../model/Student.model.js'
-import generateToken from '../utils/generateTokens.js';
-import bcryptjs from 'bcrypt'
-import nodemailer from 'nodemailer'
+import { request } from "express";
+import Student from "../model/Student.model.js";
+import generateToken from "../utils/generateTokens.js";
+import bcryptjs from "bcrypt";
+import nodemailer from "nodemailer";
 
 export const verifyMail = async(req,res)=>{
   try {
@@ -17,7 +17,7 @@ export const verifyMail = async(req,res)=>{
     // }else{
     //   res.status(401).json({message: "Student not found"});
     // }
-    const updateInfo = await user.updateOne({_id:request.query.id},{ $set:{
+    const updateInfo = await Student.updateOne({_id:req.query.id},{ $set:{
       isVerified: true
     }});
     console.log(updateInfo);
@@ -63,97 +63,130 @@ function sendVerifyMail(email,user_id,fname)
   }
 }
 
-export const signup = (async (req, res) => {
-  const { fname, mname, lname, email, password, year } = req.body;
 
-  const userExists = await Student.findOne({ email });
+export const signup = async (req, res, next) => {
+  try {
+    const { fname, mname, lname, email, password, year } = req.body;
 
-  if (userExists) {
-    res.status(400).json({ message: "User already exists" });
-    // throw new Error("User already exists");
+    const userExists = await Student.findOne({ email });
+
+    if (userExists) {
+      const err = new Error("User already exist");
+      err.status = 400;
+      next(err);
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    const user = await Student.create({
+      fname,
+      mname,
+      lname,
+      email,
+      password: hashedPassword,
+      year,
+    });
+
+    if (user) {
+      sendVerifyMail(email, user._id, fname);
+      res.status(201).json({ message: "User registered successfully!" });
+    } else {
+      const err = new Error("Registration failed");
+      err.status = 400;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
   }
-
-  const hashedPassword = await bcryptjs.hash(password, 10)
-
-  const user = await Student.create({
-    fname,
-    mname,
-    lname,
-    email,
-    password: hashedPassword,
-    year
-  });
-
-
-
-  if (user) {
-    sendVerifyMail(email,user._id,fname);
-    res.status(201).json({ message: "User registered successfully!" });
-  } else {
-    res.status(400)
-    .json({ error: "Registration failed" });
-    // throw new Error("Registration failed");
-  }
-});
-
+};
 
 export const login = async (req, res, next) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await Student.findOne({ email });
+    const user = await Student.findOne({ email });
 
-  if (!user) {
-    return res.status(401)
-    .json({ message: "Authentication failed" });
-    // throw new Error("Invalid email or password");
-  }
-
-  const passwordMatch = await bcryptjs.compare(password, user.password)
-
-  if (!passwordMatch) {
-    return res.status(401)
-    .json({ message: "Authentication failed" })
-    // throw new Error("Invalid email or password");
-  }
-
-  if (user) {
-    if(user.isApproved){
-      res.status(200).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
-      });
+    if (!user) {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
     }
-    else{
-      res.status(401)
-      .json({ message: "Not approved yet" });
-      // const error = new Error("Student not approved");
-      // next(error);
+
+    const passwordMatch = await bcryptjs.compare(password, user.password);
+
+    if (!passwordMatch) {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
     }
-  } else {
-    res.status(401)
-    .json({ message: "Invalid email or password" });
-    // throw new Error("Invalid email or password");
+
+    if (user) {
+      if (user.isVerified) {
+        if(user.isApproved){
+          res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            token: generateToken(user._id)
+          });
+        }else{
+          const err = new Error("Not Approved yet");
+          err.status = 401;
+          next(err);
+        }
+      } else {
+        const err = new Error("Not Verified yet");
+        err.status = 401;
+        next(err);
+      }
+    } else {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status - 400;
+    next(err);
   }
 };
 
 export const approveStudent = async (req, res, next) => {
-  const student = await Student.findById(req.params.id);
+  try {
+    const student = await Student.findById(req.params.id);
 
-  if (student) {
-    await Student.updateOne({_id : req.params.id}, {
-      $set: {
-        isApproved: true
-      }
-    });
-    res.status(201).json({message: "Student Approved successfully!"});
-  }else{
-    res.status(401).json({message: "Student not found"});
+    if (student) {
+      await Student.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            isApproved: true,
+          },
+        }
+      );
+      res.status(201).json({ message: "Student Approved successfully!" });
+    } else {
+      res.status(401).json({ message: "Student not found" });
+      const err = new Error("Student not found");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
   }
-}
+};
 
 export const getAllStudents = async (req, res, next) => {
-  const students = await Student.find({});
-  res.status(200).json({students});
-}
+  try {
+    const students = await Student.find({});
+    res.status(200).json(students);
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+};

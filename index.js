@@ -17,17 +17,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json())
 app.use(cors());
 app.use(cookieParser());
-app.use(errorHandler);
 dotenv.config();
 
 
 const PORT = process.env.PORT || 8000;
 
-connectDB()
 
 app.use("/api", studentRoute, mentorRoute);
-// app.use("/api", studentRoute);
+app.use(errorHandler);
 
+connectDB()
 
 app.listen(PORT, () => {
     console.log("Listen on the port "+PORT);
