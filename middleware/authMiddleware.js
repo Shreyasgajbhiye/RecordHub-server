@@ -8,7 +8,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     let token;
     let authHeader = req.headers.Authorization || req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith("bearer")) {
+    if (authHeader && authHeader.startsWith("bearer") || authHeader.startsWith("Bearer")) {
       token = authHeader.split(" ")[1];
       jwt.verify(token, process.env.JWT_SECRET, async(err, decoded) => {
         if (err) {
