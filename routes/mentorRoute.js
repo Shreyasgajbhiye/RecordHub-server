@@ -1,7 +1,7 @@
 import express from "express";
 import { login } from "../controller/mentorController.js";
 import { approveStudent } from "../controller/studentController.js";
-import { getAllStudents, getAllTechStudents, getAllNonTechStudents } from "../controller/mentorController.js";
+import { getAllStudents, getAllTechStudents, getAllNonTechStudents, getAchievementsById } from "../controller/mentorController.js";
 import { protect, restrict } from "../middleware/authMiddleware.js";
 
 const route = express.Router();
@@ -11,6 +11,7 @@ route.post('/Mentor/verifyStudent/:id', protect, restrict("mentor"), approveStud
 route.get('/Mentor/getAllStudents', protect, restrict("mentor"), getAllStudents);
 route.get('/mentor/getAllTechStudents', protect, restrict("mentor"), getAllTechStudents);
 route.get('/mentor/getAllNonTechStudents', protect, restrict("mentor"), getAllNonTechStudents);
+route.get('/Mentor/getAchievementsById/:id', protect, restrict("mentor"), getAchievementsById);
 // route.post("/create", create);
 // route.get("/getAll", getAll);
 // route.get("/getOne/:id", getOne);

@@ -143,3 +143,23 @@ export const getAllNonTechStudents = async (req, res, next) => {
   }
 }
 
+export const getAchievementsById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const student = await Student.findById(id);
+    if (student.achievement.length > 0) {
+      const achievements = await Achievement.find({ _id: { $in: student.achievement } });
+      res.status(200).json(achievements);
+    } else {
+      const err = new Error("Achievements not found");
+      err.status = 401;
+      next(err);
+    }
+    }
+   catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
+
