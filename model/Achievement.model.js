@@ -28,11 +28,6 @@ const achievementSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        default: "achievement"
-    },
-    studentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
         require: true
     }
 })

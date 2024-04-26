@@ -17,7 +17,7 @@ export const protect = asyncHandler(async (req, res, next) => {
           next(err);
         }
         req.user = decoded
-        console.log(req.user)
+        // console.log(req.user)
         next();
       });
 

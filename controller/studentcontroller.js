@@ -217,9 +217,20 @@ export const uploadAchievement = async (req, res, next) => {
         date,
         status,
         type,
-        studentId: req.user.user
       });
       if (achievement) {
+        const id = req.user.user
+        const student = await Student.findById(id);
+        const studentlawda = await Student.updateOne( {
+            _id: id
+          },  
+          {
+            $push: { 
+                  achievement: achievement._id ,
+                }
+          }
+        );
+        console.log(studentlawda)
         res.status(201).json({ message: "Achievement uploaded successfully!" });
       } else {
         const err = new Error("Achievement not found");
@@ -243,8 +254,9 @@ export const getMyAchievements = async (req, res, next) => {
     //   gfs = Grid(conn.db, mongoose.mongo);
     //   gfs.collection("uploads");
     // })
-    const achievements = await Achievement.find({ studentId: req.params.id });
-    if (achievements) {
+    const student = await Student.findById(req.params.id);
+    if (student.achievement.length > 0) {
+      const achievements = await Achievement.find({ _id: { $in: student.achievement } });
       res.status(200).json(achievements);
     } else {
       const err = new Error("Achievements not found");
