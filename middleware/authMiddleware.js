@@ -8,7 +8,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     let token;
     let authHeader = req.headers.Authorization || req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith("bearer") || authHeader.startsWith("Bearer")) {
+    if (authHeader && (authHeader.startsWith("bearer") || authHeader.startsWith("Bearer"))) {
       token = authHeader.split(" ")[1];
       jwt.verify(token, process.env.JWT_SECRET, async(err, decoded) => {
         if (err) {
@@ -16,7 +16,6 @@ export const protect = asyncHandler(async (req, res, next) => {
           err.status = 400;
           next(err);
         }
-
         req.user = decoded
         console.log(req.user)
         next();
@@ -28,7 +27,6 @@ export const protect = asyncHandler(async (req, res, next) => {
         next(err);
       }
     } else {
-
       const err = new Error("User has not provided Authorization TOken");
       err.status = 401;
       next(err);
@@ -40,10 +38,8 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-
 export const restrict = (role) => {
   return asyncHandler(async (req, res, next) => {
-    console.log(role)
     if (role === "admin") {
       if (req.user.role === "admin") {
         next();
@@ -71,6 +67,3 @@ export const restrict = (role) => {
       }
     }
   })};
-  
-
-//comment

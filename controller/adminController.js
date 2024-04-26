@@ -73,7 +73,6 @@ export const signup = async (req, res, next) => {
           expiresIn: "1d",
         }
       )
-
   
       if (user) {
         res.status(200).json({
@@ -94,8 +93,7 @@ export const signup = async (req, res, next) => {
       next(err);
     }
   };
-
-
+  
   export const registerBatch = async (req, res, next) => {
     try {
       const { name } = req.body;

@@ -1,6 +1,7 @@
 import Student from "../model/Student.model.js";
 import Batch from "../model/Batch.model.js";
-import generateToken from "../utils/generateTokens.js";
+import Achievement from "../model/Achievement.model.js";
+import mongoose from "mongoose";
 import bcryptjs from "bcrypt";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
@@ -201,5 +202,60 @@ export const approveStudent = async (req, res, next) => {
     next(err);
   }
 };
+
+export const uploadAchievement = async (req, res, next) => {
+  try {
+    const {name, description, year, date, status, type} = req.body;
+    
+    if(req.file) {
+      const pdf = req.file.path;
+      const achievement = await Achievement.create({
+        name,
+        description,
+        pdf,
+        year,
+        date,
+        status,
+        type,
+        studentId: req.user.user
+      });
+      if (achievement) {
+        res.status(201).json({ message: "Achievement uploaded successfully!" });
+      } else {
+        const err = new Error("Achievement not found");
+        err.status = 401;
+        next(err);
+      }
+    }
+
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
+}
+
+export const getMyAchievements = async (req, res, next) => {
+  try {
+    // let gfs;
+    // const conn = mongoose.connection;
+    // conn.once("open", () => {
+    //   gfs = Grid(conn.db, mongoose.mongo);
+    //   gfs.collection("uploads");
+    // })
+    const achievements = await Achievement.find({ studentId: req.params.id });
+    if (achievements) {
+      res.status(200).json(achievements);
+    } else {
+      const err = new Error("Achievements not found");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
+}
 
 
