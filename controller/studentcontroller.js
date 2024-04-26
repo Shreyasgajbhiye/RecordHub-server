@@ -6,6 +6,7 @@ import bcryptjs from "bcrypt";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 
+
 export const verifyMail = async(req,res)=>{
   try {
     // const student = await Student.findById(req.params.id);
@@ -208,7 +209,7 @@ export const uploadAchievement = async (req, res, next) => {
     const {name, description, year, date, status, type} = req.body;
     
     if(req.file) {
-      const pdf = req.file.path;
+      const pdf = req.file.filename;
       const achievement = await Achievement.create({
         name,
         description,
@@ -230,8 +231,11 @@ export const uploadAchievement = async (req, res, next) => {
                 }
           }
         );
-        console.log(studentlawda)
-        res.status(201).json({ message: "Achievement uploaded successfully!" });
+        const URI = `http://localhost:8000/${req.file.filename}`
+        res.status(201).json({
+           message: "Achievement uploaded successfully!",
+           imgURI: URI
+       });
       } else {
         const err = new Error("Achievement not found");
         err.status = 401;
@@ -248,12 +252,6 @@ export const uploadAchievement = async (req, res, next) => {
 
 export const getMyAchievements = async (req, res, next) => {
   try {
-    // let gfs;
-    // const conn = mongoose.connection;
-    // conn.once("open", () => {
-    //   gfs = Grid(conn.db, mongoose.mongo);
-    //   gfs.collection("uploads");
-    // })
     const student = await Student.findById(req.params.id);
     if (student.achievement.length > 0) {
       const achievements = await Achievement.find({ _id: { $in: student.achievement } });
@@ -269,5 +267,7 @@ export const getMyAchievements = async (req, res, next) => {
     next(err);
   }
 }
+
+
 
 
