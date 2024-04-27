@@ -163,3 +163,19 @@ export const getAchievementsById = async (req, res, next) => {
   }
 }
 
+export const getAllAchievements = async (req, res, next) => {
+  try {
+    const id = req.user.user
+    const currentMentor = await Mentor.findOne({ _id: id });
+    if(currentMentor){
+      const batchId = currentMentor.batch
+      const students = await Student.find({batch: {$in: batchId}, achievement: { $exists: true, $not: { $size: 0 } } })
+      res.send(students)
+    }
+  }catch{
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
+

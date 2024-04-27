@@ -65,6 +65,40 @@ function sendVerifyMail(email,user_id,fname)
     console.log(error.message);
   }
 }
+function sendVerifyMailToForgotPassword(email,user_id,fname)
+{
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      requireTLS:true,
+      // secure: false, // Use `true` for port 465, `false` for all other ports
+      auth: {
+        user: "abhishekchavan9394@gmail.com",
+        pass: "mkfbgkircittelmz",
+      },
+    });
+
+    const mailOptions = {
+      from: "abhishekchavan9394@gmail.com",
+      to:email,
+      subject:"For Forgot Password mail",
+      html: '<p>Hiii '+fname+' ,please <a href="http://localhost:8000/api/Student/forgotPassword?id='+user_id+'"> Click Here </a> to create new one</p>'
+    }
+    transporter.sendMail(mailOptions,function(error,info){
+      if(error)
+      {
+        console.log(error);
+      }
+      else
+      {
+        console.log("Email has been sent:- ",info.response);
+      }
+    })
+  } catch (error) {
+    console.log(error.message);
+  }
+}
 
 
 export const signup = async (req, res, next) => {
@@ -262,6 +296,24 @@ export const getMyAchievements = async (req, res, next) => {
       next(err);
     }
   } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
+}
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await Student.findOne({ email });
+    if (user) {
+      sendVerifyMailToForgotPassword(email,user._id,user.fname);
+    }else {
+      const err = new Error("User not found");
+      err.status = 400;
+      next(err);
+    }
+  }catch (error) {
     const err = new Error(error);
     err.status = 400;
     next(err);
