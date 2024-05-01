@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const mentorSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
     fname: {
         type: String,
         default: "",
@@ -27,17 +27,10 @@ const mentorSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "mentor"
-    },
-    batch: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Batch",
-        },
-    ]
-});
+        default: "admin"
+    }
+})
 
-const Mentor = mongoose.model("Mentor", mentorSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
-export default Mentor;
-
+export default Admin;

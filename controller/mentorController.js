@@ -1,74 +1,181 @@
-
-import Mentor from '../model/Mentor.model.js'
-import generateToken from '../utils/generateTokens.js';
-import bcryptjs from 'bcrypt'
-
-export const signup = (async (req, res) => {
-  const { fname, mname, lname, email, password, batch } = req.body;
-
-  const userExists = await Mentor.findOne({ email });
-
-  if (userExists) {
-    res.status(400)
-    // .json({ message: "User already exists" });
-    throw new Error("Mentor already exists");
-  }
-
-  const hashedPassword = await bcryptjs.hash(password, 10)
-
-  const user = await Mentor.create({
-    fname,
-    mname,
-    lname,
-    email,
-    password: hashedPassword,
-    batch
-  });
-
-
-
-  if (user) {
-    res.status(201).json({ message: "User registered successfully!" });
-  } else {
-    res.status(400)
-    // .json({ error: "Registration failed" });
-    throw new Error("Registration failed");
-  }
-});
-
+import Achievement from "../model/Achievement.model.js";
+import Mentor from "../model/Mentor.model.js";
+import Student from "../model/Student.model.js";
+import generateToken from "../utils/generateTokens.js";
+import bcryptjs from "bcrypt";
+import jwt from "jsonwebtoken";
 
 
 export const login = async (req, res, next) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await Mentor.findOne({ email });
+    const user = await Mentor.findOne({ email });
 
-  if (!user) {
-    return res.status(401)
-    // .json({ message: "Authentication failed" });
-    throw new Error("Invalid email or password");
-  }
+    if (!user) {
+      const err = new Error("Invalid email or password");
+      err.status = 400;
+      next(err);
+    }
 
-  const passwordMatch = await bcryptjs.compare(password, user.password)
+    const passwordMatch = await bcryptjs.compare(password, user.password);
 
-  if (!passwordMatch) {
-    return res.status(401)
-    // .json({ message: "Authentication failed" })
-    throw new Error("Invalid email or password");
-  }
+    if (!passwordMatch) {
+      const err = new Error("Invalid email or password");
+      err.status = 400;
+      next(err);
+    }
 
-  if (user) {
+    const token = jwt.sign(
+      {
+        user: user._id,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    )
+
+    if (user) {
       res.status(200).json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id),
+        role: user.role,
+        token: token,
       });
-    
-  } else {
-    res.status(401)
-    // .json({ message: "Invalid email or password" });
-    throw new Error("Invalid email or password");
+    } else {
+      const err = new Error("Invalid email or password");
+      err.status = 400;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
   }
 };
+
+export const getAllStudents = async (req, res, next) => {
+  try {
+    const id = req.user.user
+    const currentMentor = await Mentor.findOne({ _id: id });
+    if(!currentMentor){ 
+      const err = new Error("Mentor Not found");
+      err.status = 400;
+      next(err);
+    }
+    const batchId = currentMentor.batch
+    const students = await Student.find({batch: {$in: batchId} });
+    res.status(200).json(students);
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+};
+
+export const getAllTechStudents = async (req, res, next) => {
+  try {
+    const id = req.user.user
+    const currentMentor = await Mentor.findOne({ _id: id });
+    if(currentMentor){
+      const batchId = currentMentor.batch
+      const students = await Student.find({batch: {$in: batchId}})
+      .populate("achievement")
+
+      const techStudents = students.map(student => 
+      {
+        return {
+          _id: student._id,
+          fname: student.fname,
+          mname: student.mname,
+          lname: student.lname,
+          email: student.email,
+          achievement: student.achievement.filter(achievement => achievement.type === "tech")
+        }
+      }
+      )
+      res.status(200).json(techStudents);
+    }else{
+      const err = new Error("Mentor Not found");
+      err.status = 400;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
+export const getAllNonTechStudents = async (req, res, next) => {
+  try {
+    const id = req.user.user
+    const currentMentor = await Mentor.findOne({ _id: id });
+    if(currentMentor){
+      const batchId = currentMentor.batch
+      const students = await Student.find({batch: {$in: batchId}})
+      .populate("achievement")
+
+      const techStudents = students.map(student => 
+      {
+        return {
+          _id: student._id,
+          fname: student.fname,
+          mname: student.mname,
+          lname: student.lname,
+          email: student.email,
+          achievement: student.achievement.filter(achievement => achievement.type !== "tech")
+        }
+      }
+      )
+      res.status(200).json(techStudents);
+    }else{
+      const err = new Error("Mentor Not found");
+      err.status = 400;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
+
+export const getAchievementsById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const student = await Student.findById(id);
+    if (student.achievement.length > 0) {
+      const achievements = await Achievement.find({ _id: { $in: student.achievement } });
+      res.status(200).json(achievements);
+    } else {
+      const err = new Error("Achievements not found");
+      err.status = 401;
+      next(err);
+    }
+    }
+   catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
+
+export const getAllAchievements = async (req, res, next) => {
+  try {
+    const id = req.user.user
+    const currentMentor = await Mentor.findOne({ _id: id });
+    if(currentMentor){
+      const batchId = currentMentor.batch
+      const students = await Student.find({batch: {$in: batchId}, achievement: { $exists: true, $not: { $size: 0 } } })
+      res.send(students)
+    }
+  }catch{
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+}
 

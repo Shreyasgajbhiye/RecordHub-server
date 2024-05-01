@@ -1,14 +1,18 @@
 import express from "express";
-import { signup, login } from "../controller/mentorController.js";
-import { approveStudent, getAllStudents } from "../controller/studentController.js";
-import { mentorProtect } from "../middleware/authMiddleware.js";
+import { login } from "../controller/mentorController.js";
+import { approveStudent } from "../controller/studentController.js";
+import { getAllStudents, getAllTechStudents, getAllNonTechStudents, getAchievementsById, getAllAchievements } from "../controller/mentorController.js";
+import { protect, restrict } from "../middleware/authMiddleware.js";
 
 const route = express.Router();
 
-route.post('/Mentor/signup', signup)
 route.post("/Mentor/login", login)
-route.post('/Mentor/verifyStudent/:id', mentorProtect, approveStudent)
-route.post('/getAllStudents', getAllStudents);
+route.post('/Mentor/verifyStudent/:id', protect, restrict("mentor"), approveStudent)
+route.get('/Mentor/getAllStudents', protect, restrict("mentor"), getAllStudents);
+route.get('/Mentor/getAllAchievements', protect, restrict("mentor"), getAllAchievements);
+route.get('/mentor/getAllTechStudents', protect, restrict("mentor"), getAllTechStudents);
+route.get('/mentor/getAllNonTechStudents', protect, restrict("mentor"), getAllNonTechStudents);
+route.get('/Mentor/getAchievementsById/:id', protect, restrict("mentor"), getAchievementsById);
 // route.post("/create", create);
 // route.get("/getAll", getAll);
 // route.get("/getOne/:id", getOne);

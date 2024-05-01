@@ -16,12 +16,16 @@ const studentSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
+    unique: true
   },
   password: {
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    default: "student"
+},
   year: {
     type: Number,
     required: true,
@@ -31,10 +35,21 @@ const studentSchema = new mongoose.Schema({
     default: false,
     required: true
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
   batch: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Batch',
+    },
+  ],
+  achievement: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Achievement',
     },
   ],
 });
