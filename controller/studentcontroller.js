@@ -1,100 +1,325 @@
+import Student from "../model/Student.model.js";
+import Batch from "../model/Batch.model.js";
+import Achievement from "../model/Achievement.model.js";
+import mongoose from "mongoose";
+import bcryptjs from "bcrypt";
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 
-import Student from '../model/Student.model.js'
-import generateToken from '../utils/generateTokens.js';
-import bcryptjs from 'bcrypt'
 
-export const signup = (async (req, res) => {
-  const { fname, mname, lname, email, password, year } = req.body;
+export const verifyMail = async(req,res)=>{
+  try {
+    // const student = await Student.findById(req.params.id);
+    // if (student) {
+    //   await Student.updateOne({_id : req.params.id}, {
+    //     $set: {
+    //       isVerified: true
+    //     }
+    //   });
+    //   res.status(201).json({message: "Email Verified successfully!"});
+    // }else{
+    //   res.status(401).json({message: "Student not found"});
+    // }
+    const updateInfo = await Student.updateOne({_id:req.query.id},{ $set:{
+      isVerified: true
+    }});
+    console.log(updateInfo);
+    res.status(201).json({message: "Email verified successfully!"});
 
-  const userExists = await Student.findOne({ email });
-
-  if (userExists) {
-    res.status(400)
-    .json({ message: "User already exists" });
-    // throw new Error("User already exists");
+  } catch (error) {
+    console.log(error);
   }
+};
 
-  const hashedPassword = await bcryptjs.hash(password, 10)
+function sendVerifyMail(email,user_id,fname)
+{
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      requireTLS:true,
+      // secure: false, // Use `true` for port 465, `false` for all other ports
+      auth: {
+        user: "abhishekchavan9394@gmail.com",
+        pass: "mkfbgkircittelmz",
+      },
+    });
 
-  const user = await Student.create({
-    fname,
-    mname,
-    lname,
-    email,
-    password: hashedPassword,
-    year
-  });
-
-
-
-  if (user) {
-    res.status(201).json({ message: "User registered successfully!" });
-  } else {
-    res.status(400)
-    .json({ error: "Registration failed" });
-    // throw new Error("Registration failed");
+    const mailOptions = {
+      from: "abhishekchavan9394@gmail.com",
+      to:email,
+      subject:"For verification mail",
+      html: '<p>Hiii '+fname+' ,please <a href="http://localhost:8000/api/Student/Verificationlink?id='+user_id+'"> Click Here </a> to verify your mail.</p>'
+    }
+    transporter.sendMail(mailOptions,function(error,info){
+      if(error)
+      {
+        console.log(error);
+      }
+      else
+      {
+        console.log("Email has been sent:- ",info.response);
+      }
+    })
+  } catch (error) {
+    console.log(error.message);
   }
-});
+}
+function sendVerifyMailToForgotPassword(email,user_id,fname)
+{
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      requireTLS:true,
+      // secure: false, // Use `true` for port 465, `false` for all other ports
+      auth: {
+        user: "abhishekchavan9394@gmail.com",
+        pass: "mkfbgkircittelmz",
+      },
+    });
+
+    const mailOptions = {
+      from: "abhishekchavan9394@gmail.com",
+      to:email,
+      subject:"For Forgot Password mail",
+      html: '<p>Hiii '+fname+' ,please <a href="http://localhost:8000/api/Student/forgotPassword?id='+user_id+'"> Click Here </a> to create new one</p>'
+    }
+    transporter.sendMail(mailOptions,function(error,info){
+      if(error)
+      {
+        console.log(error);
+      }
+      else
+      {
+        console.log("Email has been sent:- ",info.response);
+      }
+    })
+  } catch (error) {
+    console.log(error.message);
+  }
+}
 
 
+export const signup = async (req, res, next) => {
+  try {
+    const { fname, mname, lname, email, password, year, batch } = req.body;
+
+    const userExists = await Student.findOne({ email });
+
+    if (userExists) {
+      const err = new Error("User already exist");
+      err.status = 400;
+      next(err);
+    }
+
+    const batchId = await Batch.findOne({ name: batch });
+
+      if (!batchId) {
+        const err = new Error("Batch not found Please Ask you mentor to register first");
+        err.status = 400;
+        next(err);
+      }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    const user = await Student.create({
+      fname,
+      mname,
+      lname,
+      email,
+      password: hashedPassword,
+      year,
+      batch: batchId._id
+    });
+
+    if (user) {
+      sendVerifyMail(email, user._id, fname);
+      res.status(201).json({ message: "User registered successfully!" });
+    } else {
+      const err = new Error("Registration failed");
+      err.status = 400;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
+};
 
 export const login = async (req, res, next) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await Student.findOne({ email });
+    const user = await Student.findOne({ email });
 
-  if (!user) {
-    return res.status(401)
-    .json({ message: "Authentication failed" });
-    // throw new Error("Invalid email or password");
-  }
-
-  const passwordMatch = await bcryptjs.compare(password, user.password)
-
-  if (!passwordMatch) {
-    return res.status(401)
-    .json({ message: "Authentication failed" })
-    // throw new Error("Invalid email or password");
-  }
-
-  if (user) {
-    if(user.isApproved){
-      res.status(200).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
-      });
+    if (!user) {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
     }
-    else{
-      res.status(401)
-      .json({ message: "Not approved yet" });
-      // const error = new Error("Student not approved");
-      // next(error);
+
+    const passwordMatch = await bcryptjs.compare(password, user.password);
+
+    if (!passwordMatch) {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
     }
-  } else {
-    res.status(401)
-    .json({ message: "Invalid email or password" });
-    // throw new Error("Invalid email or password");
+
+    const token = jwt.sign(
+      {
+        user: user._id,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    )
+
+    if (user) {
+      if (user.isVerified) {
+        if(user.isApproved){
+          res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: token
+          });
+        }else{
+          const err = new Error("Not Approved yet");
+          err.status = 401;
+          next(err);
+        }
+      } else {
+        const err = new Error("Not Verified yet");
+        err.status = 401;
+        next(err);
+      }
+    } else {
+      const err = new Error("Invalid email or password");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status - 400;
+    next(err);
   }
 };
 
 export const approveStudent = async (req, res, next) => {
-  const student = await Student.findById(req.params.id);
+  try {
+    const student = await Student.findById(req.params.id);
 
-  if (student) {
-    await Student.updateOne({_id : req.params.id}, {
-      $set: {
-        isApproved: true
+    if (student) {
+      await Student.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            isApproved: true,
+          },
+        }
+      );
+      res.status(201).json({ message: "Student Approved successfully!" });
+    } else {
+      res.status(401).json({ message: "Student not found" });
+      const err = new Error("Student not found");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 401;
+    next(err);
+  }
+};
+
+export const uploadAchievement = async (req, res, next) => {
+  try {
+    const {name, description, year, date, status, type} = req.body;
+    
+    if(req.file) {
+      const pdf = req.file.filename;
+      const achievement = await Achievement.create({
+        name,
+        description,
+        pdf,
+        year,
+        date,
+        status,
+        type,
+      });
+      if (achievement) {
+        const id = req.user.user
+        const student = await Student.findById(id);
+        const studentlawda = await Student.updateOne( {
+            _id: id
+          },  
+          {
+            $push: { 
+                  achievement: achievement._id ,
+                }
+          }
+        );
+        const URI = `http://localhost:8000/${req.file.filename}`
+        res.status(201).json({
+           message: "Achievement uploaded successfully!",
+           imgURI: URI
+       });
+      } else {
+        const err = new Error("Achievement not found");
+        err.status = 401;
+        next(err);
       }
-    });
-    res.status(201).json({message: "Student Approved successfully!"});
-  }else{
-    res.status(401).json({message: "Student not found"});
+    }
+
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
   }
 }
 
-export const getAllStudents = async (req, res, next) => {
-  const students = await Student.find({});
-  res.status(200).json({students});
+export const getMyAchievements = async (req, res, next) => {
+  try {
+    const student = await Student.findById(req.params.id);
+    if (student.achievement.length > 0) {
+      const achievements = await Achievement.find({ _id: { $in: student.achievement } });
+      res.status(200).json(achievements);
+    } else {
+      const err = new Error("Achievements not found");
+      err.status = 401;
+      next(err);
+    }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
 }
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await Student.findOne({ email });
+    if (user) {
+      sendVerifyMailToForgotPassword(email,user._id,user.fname);
+    }else {
+      const err = new Error("User not found");
+      err.status = 400;
+      next(err);
+    }
+  }catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
+  }
+}
+
+
+
+

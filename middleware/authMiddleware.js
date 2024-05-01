@@ -1,53 +1,69 @@
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import Student from "../model/Student.model.js";
 import Mentor from "../model/Mentor.model.js";
 
-export const studentProtect = asyncHandler(async (req, res, next) => {
-  let token;
+export const protect = asyncHandler(async (req, res, next) => {
+  try {
+    let token;
+    let authHeader = req.headers.Authorization || req.headers.authorization;
 
-  token = req.headers.authorization;
+    if (authHeader && (authHeader.startsWith("bearer") || authHeader.startsWith("Bearer"))) {
+      token = authHeader.split(" ")[1];
+      jwt.verify(token, process.env.JWT_SECRET, async(err, decoded) => {
+        if (err) {
+          const err = new Error("User isnotauthorized");
+          err.status = 400;
+          next(err);
+        }
+        req.user = decoded
+        // console.log(req.user)
+        next();
+      });
 
-  console.log(token);
-
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await Student.findById(decoded.userId).select("-password");
-
-      next();
-    } catch (error) {
-      console.error(error);
-      res.status(401);
-      throw new Error("Not authorized, token failed");
-    }
-  } else {
-    res.status(401);
-    throw new Error("Not authorized, no token");
-  }
-});
-
-export const mentorProtect = asyncHandler(async (req, res, next) => {
-  let token;
-  let authHeader = req.headers.Authorization || req.headers.authorization;
-
-  if (authHeader && authHeader.startsWith("bearer")) {
-    token = authHeader.split(" ")[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        res.status(401);
-        throw new Error("User isnotauthorized");
+      if (!token) {
+        const err = new Error("User has not provided Authorization TOken");
+        err.status = 401;
+        next(err);
       }
-      req.user = decoded.user;
-      next();
-    });
-
-    if (!token) {
-      res.status(401);
-      throw new Error("User has not provided Authorization TOken");
+    } else {
+      const err = new Error("User has not provided Authorization TOken");
+      err.status = 401;
+      next(err);
     }
+  } catch (error) {
+    const err = new Error(error);
+    err.status = 400;
+    next(err);
   }
 });
 
-//comment
+export const restrict = (role) => {
+  return asyncHandler(async (req, res, next) => {
+    if (role === "admin") {
+      if (req.user.role === "admin") {
+        next();
+      } else {
+        const err = new Error("Unauthorized");
+        err.status = 401;
+        next(err);
+      }
+      // next()
+    } else if (role === "mentor") {
+      if (req.user.role === "mentor") {
+        next();
+      } else {
+        const err = new Error("Unauthorized");
+        err.status = 401;
+        next(err);
+      }
+    } else if (role === "student") {
+      if (req.user.role === "student") {
+        next();
+      } else {
+        const err = new Error("Unauthorized");
+        err.status = 401;
+        next(err);
+      }
+    }
+  })};
